@@ -40,7 +40,7 @@ $app->addRoutingMiddleware();
 $container=$app->getContainer();
 
 $capsule = new Capsule;
-$capsule->addConnection([
+/* $capsule->addConnection([
     'driver' => 'mysql',
     'host' => 'localhost',
     'database' => 'comanda',
@@ -49,7 +49,19 @@ $capsule->addConnection([
     'charset'   => 'utf8',
     'collation' => 'utf8_unicode_ci',
     'prefix'    => '',
-]);
+]); */
+
+$capsule->addConnection([
+    'driver' => 'mysql',
+    'host' => 'remotemysql.com',
+    'database' => '9c3ZQ7CYke',
+    'username' => '9c3ZQ7CYke',
+    'port' => '3306',
+    'password' => 'qgiQjjUy6h',
+    'charset'   => 'utf8',
+    'collation' => 'utf8_unicode_ci',
+    'prefix'    => '',
+]); 
 
 $capsule->setAsGlobal();
 $capsule->bootEloquent();
