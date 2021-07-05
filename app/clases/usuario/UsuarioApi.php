@@ -264,6 +264,16 @@ class UsuarioApi implements IApiUsable
       return $response
       ->withHeader('Content-Type', 'application/json');
     }
+
+    public static function MostrarHistorial ($request, $response, $args)
+    {
+        $datos = Usuario_historial :: all();
+
+        $payload = json_encode(array("listaUsuarios" => $datos));
+        $response->getBody()->write($payload);
+
+        return $response->withHeader('Content-Type', 'application/json');
+    }
   
   
 }

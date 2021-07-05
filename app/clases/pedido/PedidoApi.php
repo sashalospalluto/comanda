@@ -535,4 +535,200 @@ class PedidoApi implements IApiUsable
       ->withHeader('Content-Type', 'application/json');
     }
 
+    public function OperacionesPorSector ($request, $response, $args)
+    {
+        $mozos = Pedido_general :: selectRaw('count(*) as cantOperaciones')->get() ;//all()->count();
+                                            
+        $bartender = Pedido_detalle ::  selectRaw('count(*) as cantOperaciones')                                          
+                                        ->join('usuarios','usuarios.id', '=', 'pedidos_detalle.id_empleado_asignado')
+                                        ->where('usuarios.tipo','=','bartender')->get();
+        
+        
+        $cocinero = Pedido_detalle ::   selectRaw('count(*) as cantOperaciones')                                           
+                                        ->join('usuarios','usuarios.id', '=', 'pedidos_detalle.id_empleado_asignado')
+                                        ->where('usuarios.tipo','=','cocinero')->get();
+                                        
+        $cervecero = Pedido_detalle ::  selectRaw('count(*) as cantOperaciones')                                        
+                                        ->join('usuarios','usuarios.id', '=', 'pedidos_detalle.id_empleado_asignado')
+                                        ->where('usuarios.tipo','=','cervecero')->get(); 
+
+        $payload = json_encode(array("Mozos" => $mozos, "Bartenders"=> $bartender, "Cocineros"=>$cocinero, "Cerveceros"=>$cervecero));
+        $response->getBody()->write($payload);
+
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function OperacionesPorSectorPorUsuario ($request, $response, $args)
+    {
+        $mozos = Pedido_general :: select('pedidos_general.id_mozo','usuarios.nombre')
+                                        ->selectRaw('count(*) as cantOperaciones') 
+                                        ->groupBy('pedidos_general.id_mozo')                                           
+                                        ->join('usuarios','usuarios.id', '=', 'pedidos_general.id_mozo')->get();
+                                            
+        $bartender = Pedido_detalle :: select('pedidos_detalle.id_empleado_asignado','usuarios.nombre')
+                                        ->selectRaw('count(*) as cantOperaciones') 
+                                        ->groupBy('pedidos_detalle.id_empleado_asignado')                                           
+                                        ->join('usuarios','usuarios.id', '=', 'pedidos_detalle.id_empleado_asignado')
+                                        ->where('usuarios.tipo','=','bartender')->get(); 
+        
+        $cocinero = Pedido_detalle :: select('pedidos_detalle.id_empleado_asignado','usuarios.nombre')
+                                        ->selectRaw('count(*) as cantOperaciones') 
+                                        ->groupBy('pedidos_detalle.id_empleado_asignado')                                           
+                                        ->join('usuarios','usuarios.id', '=', 'pedidos_detalle.id_empleado_asignado')
+                                        ->where('usuarios.tipo','=','cocinero')->get();
+                                        
+        $cervecero = Pedido_detalle :: select('pedidos_detalle.id_empleado_asignado','usuarios.nombre')
+                                        ->selectRaw('count(*) as cantOperaciones') 
+                                        ->groupBy('pedidos_detalle.id_empleado_asignado')                                           
+                                        ->join('usuarios','usuarios.id', '=', 'pedidos_detalle.id_empleado_asignado')
+                                        ->where('usuarios.tipo','=','cervecero')->get(); 
+
+        $payload = json_encode(array("Mozos" => $mozos, "Bartenders"=> $bartender, "Cocineros"=>$cocinero, "Cerveceros"=>$cervecero));
+        $response->getBody()->write($payload);
+
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+
+    public function OperacionesPorUsuario ($request, $response, $args)
+    {
+        $id_usuario = $args['id_usuario'];
+        $verificarUsuario = Usuario:: find($id_usuario);
+
+        if($verificarUsuario!=null)
+        {
+            if($verificarUsuario->tipo == 'mozo')
+            {
+                $usuario = Pedido_general :: select('pedidos_general.id_mozo','usuarios.nombre')
+                                            ->selectRaw('count(*) as cantOperaciones') 
+                                            ->groupBy('pedidos_general.id_mozo')                                           
+                                            ->join('usuarios','usuarios.id', '=','pedidos_general.id_mozo')
+                                            ->where('pedidos_general.id_mozo', '=', $id_usuario)->get();
+            }
+            else
+            {
+                $usuario = Pedido_detalle :: select('pedidos_detalle.id_empleado_asignado AS id_empleado','usuarios.nombre','usuarios.tipo AS puesto')
+                                        ->selectRaw('count(*) as cantOperaciones') 
+                                        ->groupBy('pedidos_detalle.id_empleado_asignado')                                           
+                                        ->join('usuarios','usuarios.id', '=', 'pedidos_detalle.id_empleado_asignado')
+                                        ->where ('pedidos_detalle.id_empleado_asignado','=', $id_usuario)->get(); 
+            }
+        }
+        else
+        {
+            $usuario = "El usuario no existe";
+        }
+                                            
+        $payload = json_encode(array("Usuario" => $usuario));
+        $response->getBody()->write($payload);
+
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function ProductoMasVendido($request, $response, $args)
+    {
+        $productos = Pedido_detalle :: select('Pedidos_detalle.id_producto_pedido','productos.nombre')
+                                            ->selectRaw('count(*) as cantVendidos') 
+                                            ->groupBy('Pedidos_detalle.id_producto_pedido')
+                                            ->join('productos','Pedidos_detalle.id_producto_pedido','=','productos.id')
+                                            ->orderBy('cantVendidos','desc')->first();  
+                                            
+        $payload = json_encode(array("Usuario" => $productos));
+        $response->getBody()->write($payload);
+
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function ProductoMenosVendido($request, $response, $args)
+    {
+        $productos = Producto :: select ('Pedidos_detalle.id_producto_pedido','productos.nombre')
+                                        ->selectRaw('count(*) as cantVendidos') 
+                                        ->groupBy('Pedidos_detalle.id_producto_pedido')
+                                        ->join('Pedidos_detalle','Pedidos_detalle.id_producto_pedido','=','productos.id')
+                                        ->orderBy('cantVendidos','asc')->first();   
+
+        $payload = json_encode(array("Usuario" => $productos));
+        $response->getBody()->write($payload);
+
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function PedidosCancelados($request, $response, $args)
+    {
+        $pedido = Pedido_detalle :: where('estado','=','cancelado')->get();
+
+        $payload = json_encode(array("Cancelados" => $pedido));
+        $response->getBody()->write($payload);
+
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function MesaMenosUsada($request, $response, $args)
+    {
+        $mesa = Pedido_general :: select('Pedidos_general.id_mesa')
+                                ->selectRaw('count(*) as cantUso') 
+                                ->groupBy('Pedidos_general.id_mesa')
+                                ->orderBy('cantUso','ASC')->first();  
+                                            
+        $payload = json_encode(array("Mesa" => $mesa));
+        $response->getBody()->write($payload);
+
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function MesaMasUsada($request, $response, $args)
+    {
+        $mesa = Pedido_general :: select('Pedidos_general.id_mesa')
+                                ->selectRaw('count(*) as cantUso') 
+                                ->groupBy('Pedidos_general.id_mesa')
+                                ->orderBy('cantUso','DESC')->first();  
+                                            
+        $payload = json_encode(array("Mesa" => $mesa));
+        $response->getBody()->write($payload);
+
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function MesaConMayorImporte($request, $response, $args)
+    {
+        $mesa = Pedido_general :: orderBy('total','DESC')->first();   
+                                            
+        $payload = json_encode(array("Mesa que menos facturo" => $mesa));
+
+        $response->getBody()->write($payload);
+    }
+
+    public function MesaConMenorImporte($request, $response, $args)
+    {
+        $mesa = Pedido_general :: orderBy('total','ASC')->first();  
+        
+        $payload = json_encode(array("Mesa que mas facturo" => $mesa));
+        
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function MesaConMejorComentario($request, $response, $args)
+    {
+        $mesa = Pedido_general :: orderBy('promedio_puntuacion','DESC')->first();   
+                                            
+        $payload = json_encode(array("Mesa que menos facturo" => $mesa));
+
+        $response->getBody()->write($payload);
+
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function MesaConPeorComentario($request, $response, $args)
+    {
+        $mesa = Pedido_general :: orderBy('promedio_puntuacion','ASC')->first();  
+        
+        $payload = json_encode(array("Mesa que mas facturo" => $mesa));
+        
+        $response->getBody()->write($payload);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+
+
 }

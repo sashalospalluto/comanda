@@ -21,6 +21,7 @@ require_once './clases/mesa/MesaApi.php';
 require_once './clases/pedido/PedidoApi.php';
 require_once './clases/encuesta/EncuestaApi.php';
 
+
 // Load ENV
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
@@ -40,7 +41,8 @@ $app->addRoutingMiddleware();
 $container=$app->getContainer();
 
 $capsule = new Capsule;
-/* $capsule->addConnection([
+
+/*  $capsule->addConnection([
     'driver' => 'mysql',
     'host' => 'localhost',
     'database' => 'comanda',
@@ -49,7 +51,7 @@ $capsule = new Capsule;
     'charset'   => 'utf8',
     'collation' => 'utf8_unicode_ci',
     'prefix'    => '',
-]); */
+]);  */
 
 $capsule->addConnection([
     'driver' => 'mysql',
@@ -61,7 +63,7 @@ $capsule->addConnection([
     'charset'   => 'utf8',
     'collation' => 'utf8_unicode_ci',
     'prefix'    => '',
-]); 
+]);  
 
 $capsule->setAsGlobal();
 $capsule->bootEloquent();
@@ -146,5 +148,25 @@ $app->group('/pedidos', function (RouteCollectorProxy $group)
 });
 
 $app->post('/encuestas/{id_mesa}/{id_pedido}', \EncuestaApi::class . ':CompletarEncuesta');
+
+
+$app->group('/estadisticas', function (RouteCollectorProxy $group)  
+{
+  $group->get('/historial', \UsuarioApi::class . ':MostrarHistorial');
+  $group->get('/operacionesPorSector', \PedidoApi::class . ':OperacionesPorSector');
+  $group->get('/operacionesPorSectorPorUsuario', \PedidoApi::class . ':OperacionesPorSectorPorUsuario');
+  $group->get('/operacionesPorUsuario/{id_usuario}', \PedidoApi::class . ':OperacionesPorUsuario');
+  $group->get('/masVendido', \PedidoApi::class . ':ProductoMasVendido');
+  $group->get('/menosVendido', \PedidoApi::class . ':ProductoMenosVendido');
+  $group->get('/pedidosCancelados', \PedidoApi::class . ':PedidosCancelados');
+  $group->get('/mesaMasUsada', \PedidoApi::class . ':MesaMasUsada');
+  $group->get('/mesaMenosUsada', \PedidoApi::class . ':MesaMenosUsada');
+  $group->get('/mesaConMenorImporte', \PedidoApi::class . ':MesaConMenorImporte');
+  $group->get('/mesaConMayorImporte', \PedidoApi::class . ':MesaConMayorImporte');
+  $group->get('/mesaConMejorComentario', \PedidoApi::class . ':MesaConMejorComentario');
+  $group->get('/mesaConPeorComentario', \PedidoApi::class . ':MesaConPeorComentario');
+
+
+});
 
 $app->run();
